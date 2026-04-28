@@ -643,9 +643,57 @@ export const generateWAMessageContent = async (
 	}
 
 	if (hasOptionalProperty(message, 'interactiveButtons') && !!(message as any).interactiveButtons) {
+		const rawButtons: any[] = (message as any).interactiveButtons
+		const processedButtons = rawButtons.map((btn: any) => {
+			const isUrlBtn = btn.name === 'cta_url' || btn.name === 'open_webview'
+			if (isUrlBtn) {
+				let bp: any = {}
+				if (btn.buttonParamsJson) {
+					try { bp = typeof btn.buttonParamsJson === 'string' ? JSON.parse(btn.buttonParamsJson) : btn.buttonParamsJson } catch {}
+				}
+				const url = btn.url || bp.url || bp.landing_page_url || ''
+				return {
+					name: 'cta_url',
+					buttonParamsJson: JSON.stringify({
+						display_text: bp.display_text || btn.displayText || 'Open',
+						url,
+						landing_page_url: bp.landing_page_url || url,
+						merchant_url: bp.merchant_url || url,
+						webview_presentation: bp.webview_presentation || null,
+						webview_interaction: bp.webview_interaction !== undefined ? bp.webview_interaction : true,
+						payment_link_preview: bp.payment_link_preview !== undefined ? bp.payment_link_preview : false
+					})
+				}
+			}
+			return btn
+		})
+		let messageParamsJson: string | undefined = (message as any).messageParamsJson
+		const hasUrlButtons = rawButtons.some((b: any) => b.name === 'cta_url' || b.name === 'open_webview')
+		if (!messageParamsJson && hasUrlButtons) {
+			const urlBtns = rawButtons.filter((b: any) => b.name === 'cta_url' || b.name === 'open_webview')
+			const tapTargetList = urlBtns.map((b: any, i: number) => {
+				let canonicalUrl = ''
+				if (b.buttonParamsJson) {
+					try {
+						const bp = typeof b.buttonParamsJson === 'string' ? JSON.parse(b.buttonParamsJson) : b.buttonParamsJson
+						canonicalUrl = bp.landing_page_url || bp.url || ''
+					} catch {}
+				} else {
+					canonicalUrl = b.url || ''
+				}
+				return { canonical_url: canonicalUrl, url_type: 'STATIC', button_index: i, tap_target_format: 1 }
+			})
+			messageParamsJson = JSON.stringify({
+				bottom_sheet: { in_thread_buttons_limit: 3, divider_indices: [] },
+				tap_target_configuration: tapTargetList.length > 0 ? tapTargetList[0] : {},
+				tap_target_list: tapTargetList
+			})
+		}
 		const interactiveMessage: any = {
 			nativeFlowMessage: WAProto.Message.InteractiveMessage.NativeFlowMessage.fromObject({
-				buttons: (message as any).interactiveButtons
+				buttons: processedButtons,
+				messageVersion: 1,
+				...(messageParamsJson ? { messageParamsJson } : {})
 			})
 		}
 		if ('text' in message) {
@@ -670,12 +718,9 @@ export const generateWAMessageContent = async (
 			}
 			Object.assign(interactiveMessage.header, m)
 		}
-		if ('contextInfo' in message && !!(message as any).contextInfo) {
-			interactiveMessage.contextInfo = (message as any).contextInfo
-		}
-		if ('mentions' in message && message.mentions?.length) {
-			interactiveMessage.contextInfo = { mentionedJid: message.mentions }
-		}
+		const existingCtx: any = ('contextInfo' in message && !!(message as any).contextInfo) ? (message as any).contextInfo : {}
+		const mentionCtx: any = ('mentions' in message && message.mentions?.length) ? { mentionedJid: message.mentions } : {}
+		interactiveMessage.contextInfo = { ...existingCtx, ...mentionCtx, dataSharingContext: { showMmDisclosure: false } }
 		m = { interactiveMessage }
 	}
 
