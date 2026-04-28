@@ -1,6 +1,6 @@
 import { proto } from '../../WAProto/index.js';
-import type { WAMessageContent, WAMessageKey } from '../Types';
-import type { BinaryNode } from '../WABinary';
+import type { WAMessageContent, WAMessageKey } from '../Types.js';
+import type { BinaryNode } from '../WABinary.js';
 export type ReportingField = {
     f: number;
     m?: boolean;

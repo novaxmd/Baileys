@@ -1,5 +1,5 @@
 import { Boom } from '@hapi/boom';
-import type { Contact } from './Contact';
+import type { Contact } from './Contact.js';
 export declare enum SyncState {
     Connecting = 0,
     AwaitingInitialSync = 1,

@@ -1,4 +1,4 @@
-import type { BinaryNode } from '../WABinary';
+import type { BinaryNode } from '../WABinary.js';
 export type MessageType = 'message' | 'call' | 'receipt' | 'notification';
 export type OfflineNodeProcessorDeps = {
     isWsOpen: () => boolean;

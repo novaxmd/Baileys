@@ -1,11 +1,11 @@
 import type { proto } from '../../WAProto/index.js';
-import type { AccountSettings } from './Auth';
+import type { AccountSettings } from './Auth.js';
 import type { QuickReplyAction } from './Bussines.js';
-import type { BufferedEventData } from './Events';
-import type { LabelActionBody } from './Label';
-import type { ChatLabelAssociationActionBody } from './LabelAssociation';
-import type { MessageLabelAssociationActionBody } from './LabelAssociation';
-import type { MinimalMessage, WAMessageKey } from './Message';
+import type { BufferedEventData } from './Events.js';
+import type { LabelActionBody } from './Label.js';
+import type { ChatLabelAssociationActionBody } from './LabelAssociation.js';
+import type { MessageLabelAssociationActionBody } from './LabelAssociation.js';
+import type { MinimalMessage, WAMessageKey } from './Message.js';
 export type WAPrivacyValue = 'all' | 'contacts' | 'contact_blacklist' | 'none';
 export type WAPrivacyOnlineValue = 'all' | 'match_last_seen';
 export type WAPrivacyGroupAddValue = 'all' | 'contacts' | 'contact_blacklist';

@@ -1,5 +1,5 @@
-import type { BaileysEventEmitter, BaileysEventMap } from '../Types';
-import type { ILogger } from './logger';
+import type { BaileysEventEmitter, BaileysEventMap } from '../Types.js';
+import type { ILogger } from './logger.js';
 type BaileysEventData = Partial<BaileysEventMap>;
 type BaileysBufferableEventEmitter = BaileysEventEmitter & {
     process(handler: (events: BaileysEventData) => void | Promise<void>): () => void;

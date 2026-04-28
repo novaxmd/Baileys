@@ -1,4 +1,4 @@
-import type { UserFacingSocketConfig } from '../Types';
+import type { UserFacingSocketConfig } from '../Types.js';
 declare const makeWASocket: (config: UserFacingSocketConfig) => {
     communityMetadata: (jid: string) => Promise<import("..").GroupMetadata>;
     communityCreate: (subject: string, body: string) => Promise<import("..").GroupMetadata | null>;

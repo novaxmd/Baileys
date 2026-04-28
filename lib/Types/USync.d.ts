@@ -1,5 +1,5 @@
-import type { BinaryNode } from '../WABinary';
-import { USyncUser } from '../WAUSync';
+import type { BinaryNode } from '../WABinary.js';
+import { USyncUser } from '../WAUSync.js';
 export interface USyncQueryProtocol {
     name: string;
     getQueryElement: () => BinaryNode;

@@ -1,9 +1,9 @@
 import { Boom } from '@hapi/boom';
-import type { SocketConfig } from '../Types';
-import { type BinaryNode } from '../WABinary';
+import type { SocketConfig } from '../Types.js';
+import { type BinaryNode } from '../WABinary.js';
 import { BinaryInfo } from '../WAM/BinaryInfo.js';
-import { USyncQuery } from '../WAUSync/';
-import { WebSocketClient } from './Client';
+import { USyncQuery } from '../WAUSync/.js';
+import { WebSocketClient } from './Client.js';
 export declare const makeSocket: (config: SocketConfig) => {
     type: "md";
     ws: WebSocketClient;
