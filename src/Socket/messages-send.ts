@@ -1099,7 +1099,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		if (msg.interactiveMessage?.nativeFlowMessage?.buttons?.[0]?.name === 'payment_info') return 'payment_info'
 		if (msg.interactiveMessage?.nativeFlowMessage?.buttons?.[0]?.name === 'payment_status') return 'payment_status'
 		if (msg.interactiveMessage?.nativeFlowMessage?.buttons?.[0]?.name === 'payment_method') return 'payment_method'
-		if (msg.interactiveMessage && msg.interactiveMessage.nativeFlowMessage) return 'interactive'
+		if (msg.interactiveMessage && (msg.interactiveMessage.nativeFlowMessage || msg.interactiveMessage.carouselMessage)) return 'interactive'
 		if (msg.interactiveMessage?.nativeFlowMessage) return 'native_flow'
 		return null
 	}
