@@ -642,6 +642,81 @@ export const generateWAMessageContent = async (
 		m = { listMessage }
 	}
 
+	if (hasOptionalProperty(message, 'interactiveButtons') && !!(message as any).interactiveButtons) {
+		const interactiveMessage: any = {
+			nativeFlowMessage: WAProto.Message.InteractiveMessage.NativeFlowMessage.fromObject({
+				buttons: (message as any).interactiveButtons
+			})
+		}
+		if ('text' in message) {
+			interactiveMessage.body = { text: (message as any).text }
+		} else if ('caption' in message) {
+			interactiveMessage.body = { text: (message as any).caption }
+			interactiveMessage.header = {
+				title: (message as any).title,
+				subtitle: (message as any).subtitle,
+				hasMediaAttachment: !!(message as any).media
+			}
+			Object.assign(interactiveMessage.header, m)
+		}
+		if ('footer' in message && !!(message as any).footer) {
+			interactiveMessage.footer = { text: (message as any).footer }
+		}
+		if ('title' in message && !!(message as any).title) {
+			interactiveMessage.header = {
+				title: (message as any).title,
+				subtitle: (message as any).subtitle,
+				hasMediaAttachment: !!(message as any).media
+			}
+			Object.assign(interactiveMessage.header, m)
+		}
+		if ('contextInfo' in message && !!(message as any).contextInfo) {
+			interactiveMessage.contextInfo = (message as any).contextInfo
+		}
+		if ('mentions' in message && message.mentions?.length) {
+			interactiveMessage.contextInfo = { mentionedJid: message.mentions }
+		}
+		m = { interactiveMessage }
+	}
+
+	if (hasOptionalProperty(message, 'shop') && !!(message as any).shop) {
+		const interactiveMessage: any = {
+			shopStorefrontMessage: WAProto.Message.InteractiveMessage.ShopMessage.fromObject({
+				surface: (message as any).shop,
+				id: (message as any).id
+			})
+		}
+		if ('text' in message) {
+			interactiveMessage.body = { text: (message as any).text }
+		} else if ('caption' in message) {
+			interactiveMessage.body = { text: (message as any).caption }
+			interactiveMessage.header = {
+				title: (message as any).title,
+				subtitle: (message as any).subtitle,
+				hasMediaAttachment: !!(message as any).media
+			}
+			Object.assign(interactiveMessage.header, m)
+		}
+		if ('footer' in message && !!(message as any).footer) {
+			interactiveMessage.footer = { text: (message as any).footer }
+		}
+		if ('title' in message && !!(message as any).title) {
+			interactiveMessage.header = {
+				title: (message as any).title,
+				subtitle: (message as any).subtitle,
+				hasMediaAttachment: !!(message as any).media
+			}
+			Object.assign(interactiveMessage.header, m)
+		}
+		if ('contextInfo' in message && !!(message as any).contextInfo) {
+			interactiveMessage.contextInfo = (message as any).contextInfo
+		}
+		if ('mentions' in message && message.mentions?.length) {
+			interactiveMessage.contextInfo = { mentionedJid: message.mentions }
+		}
+		m = { interactiveMessage }
+	}
+
 	if (hasOptionalProperty(message, 'viewOnce') && !!message.viewOnce) {
 		m = { viewOnceMessage: { message: m } }
 	}

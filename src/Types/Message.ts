@@ -300,6 +300,31 @@ export type PollResultMessageOptions = {
 	}
 }
 
+export type InteractiveButtonsMessageOptions = {
+	interactiveButtons: proto.Message.InteractiveMessage.NativeFlowMessage.INativeFlowButton[]
+	text?: string
+	caption?: string
+	title?: string
+	subtitle?: string
+	footer?: string
+	media?: boolean
+	contextInfo?: proto.IContextInfo
+	mentions?: string[]
+}
+
+export type ShopMessageOptions = {
+	shop: proto.Message.InteractiveMessage.ShopMessage.Surface
+	id?: string
+	text?: string
+	caption?: string
+	title?: string
+	subtitle?: string
+	footer?: string
+	media?: boolean
+	contextInfo?: proto.IContextInfo
+	mentions?: string[]
+}
+
 export type AnyRegularMessageContent = (
 	| ({
 			text: string
@@ -360,6 +385,8 @@ export type AnyRegularMessageContent = (
 	| PaymentMessageOptions
 	| ProductSendOptions
 	| PollResultMessageOptions
+	| InteractiveButtonsMessageOptions
+	| ShopMessageOptions
 ) &
 	ViewOnce
 

@@ -871,7 +871,19 @@ export const makeChatsSocket = (config: SocketConfig) => {
 				const { [name]: currentSyncVersion } = await authState.keys.get('app-state-sync-version', [name])
 				initial = currentSyncVersion ? ensureLTHashStateVersion(currentSyncVersion) : newLTHashState()
 
-				encodeResult = await encodeSyncdPatch(patchCreate, myAppStateKeyId, initial, getAppStateSyncKey)
+				try {
+					encodeResult = await encodeSyncdPatch(patchCreate, myAppStateKeyId, initial, getAppStateSyncKey)
+				} catch (syncErr: any) {
+					if (typeof syncErr?.message === 'string' && syncErr.message.includes('not present')) {
+						logger.warn({ keyId: myAppStateKeyId }, 'app state key missing — resyncing')
+						await resyncAppState(ALL_WA_PATCH_NAMES, true)
+						const { [name]: freshVersion } = await authState.keys.get('app-state-sync-version', [name])
+						initial = freshVersion ? ensureLTHashStateVersion(freshVersion) : newLTHashState()
+						encodeResult = await encodeSyncdPatch(patchCreate, myAppStateKeyId, initial, getAppStateSyncKey)
+					} else {
+						throw syncErr
+					}
+				}
 				const { patch, state } = encodeResult
 
 				const node: BinaryNode = {
