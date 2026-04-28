@@ -1,5 +1,5 @@
 import NodeCache from '@cacheable/node-cache';
-import { type BinaryNode } from '../WABinary.js';
+import { type BinaryNode } from '../WABinary/index.js';
 import type { ILogger } from './logger.js';
 export type IdentityChangeResult = {
     action: 'no_identity_node';

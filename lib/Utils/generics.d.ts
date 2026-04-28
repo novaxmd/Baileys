@@ -1,6 +1,6 @@
 import { proto } from '../../WAProto/index.js';
-import type { BaileysEventEmitter, BaileysEventMap, ConnectionState, WACallUpdateType, WAMessageKey, WAVersion } from '../Types.js';
-import { type BinaryNode } from '../WABinary.js';
+import type { BaileysEventEmitter, BaileysEventMap, ConnectionState, WACallUpdateType, WAMessageKey, WAVersion } from '../Types/index.js';
+import { type BinaryNode } from '../WABinary/index.js';
 export declare const BufferJSON: {
     replacer: (k: any, value: any) => any;
     reviver: (_: any, value: any) => any;

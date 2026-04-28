@@ -1,4 +1,4 @@
-import type { KeyPair } from '../Types.js';
+import type { KeyPair } from '../Types/index.js';
 export { md5, hkdf } from 'whatsapp-rust-bridge';
 export declare const generateSignalPubKey: (pubKey: Uint8Array | Buffer) => any;
 export declare const Curve: {

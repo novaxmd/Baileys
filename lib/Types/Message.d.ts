@@ -1,8 +1,8 @@
 import type { Readable } from 'stream';
 import type { URL } from 'url';
 import { proto } from '../../WAProto/index.js';
-import type { MediaType } from '../Defaults.js';
-import type { BinaryNode } from '../WABinary.js';
+import type { MediaType } from '../Defaults/index.js';
+import type { BinaryNode } from '../WABinary/index.js';
 import type { GroupMetadata } from './GroupMetadata.js';
 import type { CacheStore } from './Socket.js';
 export { proto as WAProto };

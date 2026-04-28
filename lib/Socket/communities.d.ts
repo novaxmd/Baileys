@@ -1,6 +1,6 @@
 import { proto } from '../../WAProto/index.js';
-import { type GroupMetadata, type ParticipantAction, type SocketConfig, type WAMessageKey } from '../Types.js';
-import { type BinaryNode } from '../WABinary.js';
+import { type GroupMetadata, type ParticipantAction, type SocketConfig, type WAMessageKey } from '../Types/index.js';
+import { type BinaryNode } from '../WABinary/index.js';
 export declare const makeCommunitiesSocket: (config: SocketConfig) => {
     communityMetadata: (jid: string) => Promise<GroupMetadata>;
     communityCreate: (subject: string, body: string) => Promise<GroupMetadata | null>;

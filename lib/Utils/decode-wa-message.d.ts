@@ -1,6 +1,6 @@
-import type { WAMessage } from '../Types.js';
+import type { WAMessage } from '../Types/index.js';
 import type { SignalRepositoryWithLIDStore } from '../Types/Signal.js';
-import { type BinaryNode } from '../WABinary.js';
+import { type BinaryNode } from '../WABinary/index.js';
 import type { ILogger } from './logger.js';
 export declare const getDecryptionJid: (sender: string, repository: SignalRepositoryWithLIDStore) => Promise<string>;
 export declare const NO_MESSAGE_FOUND_ERROR_TEXT = "Message absent from node";

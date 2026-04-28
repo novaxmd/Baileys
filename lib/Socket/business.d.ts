@@ -1,6 +1,6 @@
-import type { GetCatalogOptions, ProductCreate, ProductUpdate, SocketConfig, WAMediaUpload } from '../Types.js';
+import type { GetCatalogOptions, ProductCreate, ProductUpdate, SocketConfig, WAMediaUpload } from '../Types/index.js';
 import type { UpdateBussinesProfileProps } from '../Types/Bussines.js';
-import { type BinaryNode } from '../WABinary.js';
+import { type BinaryNode } from '../WABinary/index.js';
 export declare const makeBusinessSocket: (config: SocketConfig) => {
     logger: import("../Utils/logger").ILogger;
     getOrderDetails: (orderId: string, tokenBase64: string) => Promise<import("..").OrderDetails>;

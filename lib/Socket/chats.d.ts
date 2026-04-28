@@ -1,10 +1,10 @@
 import { Boom } from '@hapi/boom';
 import { proto } from '../../WAProto/index.js';
-import type { BotListInfo, ChatModification, MessageUpsertType, SocketConfig, WABusinessProfile, WAMediaUpload, WAMessage, WAPatchCreate, WAPresence, WAPrivacyCallValue, WAPrivacyGroupAddValue, WAPrivacyMessagesValue, WAPrivacyOnlineValue, WAPrivacyValue, WAReadReceiptsValue } from '../Types.js';
+import type { BotListInfo, ChatModification, MessageUpsertType, SocketConfig, WABusinessProfile, WAMediaUpload, WAMessage, WAPatchCreate, WAPresence, WAPrivacyCallValue, WAPrivacyGroupAddValue, WAPrivacyMessagesValue, WAPrivacyOnlineValue, WAPrivacyValue, WAReadReceiptsValue } from '../Types/index.js';
 import type { QuickReplyAction } from '../Types/Bussines.js';
 import type { LabelActionBody } from '../Types/Label.js';
-import { type BinaryNode } from '../WABinary.js';
-import { USyncQuery } from '../WAUSync.js';
+import { type BinaryNode } from '../WABinary/index.js';
+import { USyncQuery } from '../WAUSync/index.js';
 export declare const makeChatsSocket: (config: SocketConfig) => {
     serverProps: {
         privacyTokenOn1to1: boolean;

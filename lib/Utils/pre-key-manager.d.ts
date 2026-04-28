@@ -1,4 +1,4 @@
-import type { SignalDataSet, SignalDataTypeMap, SignalKeyStore } from '../Types.js';
+import type { SignalDataSet, SignalDataTypeMap, SignalKeyStore } from '../Types/index.js';
 import type { ILogger } from './logger.js';
 export declare class PreKeyManager {
     private readonly store;

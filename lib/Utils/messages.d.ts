@@ -1,5 +1,5 @@
 import { proto } from '../../WAProto/index.js';
-import type { AnyMediaMessageContent, AnyMessageContent, MessageContentGenerationOptions, MessageGenerationOptions, MessageGenerationOptionsFromContent, MessageUserReceipt, WAMessage, WAMessageContent, WAMessageKey } from '../Types.js';
+import type { AnyMediaMessageContent, AnyMessageContent, MessageContentGenerationOptions, MessageGenerationOptions, MessageGenerationOptionsFromContent, MessageUserReceipt, WAMessage, WAMessageContent, WAMessageKey } from '../Types/index.js';
 import type { ILogger } from './logger.js';
 import { type MediaDownloadOptions } from './messages-media.js';
 type ExtractByKey<T, K extends PropertyKey> = T extends Record<K, any> ? T : never;

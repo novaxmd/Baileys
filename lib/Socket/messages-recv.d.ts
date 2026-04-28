@@ -1,8 +1,8 @@
 import { Boom } from '@hapi/boom';
 import Long from 'long';
 import { proto } from '../../WAProto/index.js';
-import type { MessageReceiptType, MessageRelayOptions, SocketConfig, WAMessage, WAMessageKey } from '../Types.js';
-import { type BinaryNode } from '../WABinary.js';
+import type { MessageReceiptType, MessageRelayOptions, SocketConfig, WAMessage, WAMessageKey } from '../Types/index.js';
+import { type BinaryNode } from '../WABinary/index.js';
 export declare const makeMessagesRecvSocket: (config: SocketConfig) => {
     sendMessageAck: (node: BinaryNode, errorCode?: number) => Promise<void>;
     sendRetryRequest: (node: BinaryNode, forceIncludeKeys?: boolean) => Promise<void>;

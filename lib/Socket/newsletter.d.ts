@@ -1,5 +1,5 @@
-import type { SocketConfig, WAMediaUpload } from '../Types.js';
-import type { NewsletterMetadata, NewsletterUpdate } from '../Types.js';
+import type { SocketConfig, WAMediaUpload } from '../Types/index.js';
+import type { NewsletterMetadata, NewsletterUpdate } from '../Types/index.js';
 export declare const makeNewsletterSocket: (config: SocketConfig) => {
     newsletterCreate: (name: string, description?: string) => Promise<NewsletterMetadata>;
     newsletterUpdate: (jid: string, updates: NewsletterUpdate) => Promise<unknown>;

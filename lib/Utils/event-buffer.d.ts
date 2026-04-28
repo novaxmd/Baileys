@@ -1,4 +1,4 @@
-import type { BaileysEventEmitter, BaileysEventMap } from '../Types.js';
+import type { BaileysEventEmitter, BaileysEventMap } from '../Types/index.js';
 import type { ILogger } from './logger.js';
 type BaileysEventData = Partial<BaileysEventMap>;
 type BaileysBufferableEventEmitter = BaileysEventEmitter & {

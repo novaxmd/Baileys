@@ -3,9 +3,9 @@ import type { Agent } from 'https';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import { proto } from '../../WAProto/index.js';
-import { type MediaType } from '../Defaults.js';
-import type { DownloadableMessage, MediaConnInfo, MediaDecryptionKeyInfo, SocketConfig, WAMediaUpload, WAMediaUploadFunction, WAMessageContent, WAMessageKey } from '../Types.js';
-import { type BinaryNode } from '../WABinary.js';
+import { type MediaType } from '../Defaults/index.js';
+import type { DownloadableMessage, MediaConnInfo, MediaDecryptionKeyInfo, SocketConfig, WAMediaUpload, WAMediaUploadFunction, WAMessageContent, WAMessageKey } from '../Types/index.js';
+import { type BinaryNode } from '../WABinary/index.js';
 import type { ILogger } from './logger.js';
 export declare const hkdfInfoKey: (type: MediaType) => string;
 export declare const getRawMediaUploadData: (media: WAMediaUpload, mediaType: MediaType, logger?: ILogger) => Promise<{

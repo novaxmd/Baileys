@@ -1,5 +1,5 @@
-import type { SignalKeyStoreWithTransaction } from '../Types.js';
-import type { BinaryNode } from '../WABinary.js';
+import type { SignalKeyStoreWithTransaction } from '../Types/index.js';
+import type { BinaryNode } from '../WABinary/index.js';
 export declare const TC_TOKEN_INDEX_KEY = "__index";
 export declare function readTcTokenIndex(keys: SignalKeyStoreWithTransaction): Promise<string[]>;
 export declare function buildMergedTcTokenIndexWrite(keys: SignalKeyStoreWithTransaction, addedJids: Iterable<string>): Promise<{

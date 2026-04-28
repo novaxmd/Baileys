@@ -1,9 +1,9 @@
 import { Boom } from '@hapi/boom';
 import { proto } from '../../WAProto/index.js';
-import type { AnyMessageContent, MediaConnInfo, MessageReceiptType, MessageRelayOptions, MiscMessageGenerationOptions, SocketConfig, WAMessage, WAMessageKey } from '../Types.js';
-import { MessageRetryManager } from '../Utils.js';
-import { type BinaryNode, type JidWithDevice } from '../WABinary.js';
-import { USyncQuery } from '../WAUSync.js';
+import type { AnyMessageContent, MediaConnInfo, MessageReceiptType, MessageRelayOptions, MiscMessageGenerationOptions, SocketConfig, WAMessage, WAMessageKey } from '../Types/index.js';
+import { MessageRetryManager } from '../Utils/index.js';
+import { type BinaryNode, type JidWithDevice } from '../WABinary/index.js';
+import { USyncQuery } from '../WAUSync/index.js';
 import { ToxicHandler } from './groupStatus.js';
 export declare const makeMessagesSocket: (config: SocketConfig) => {
     issuePrivacyTokens: (jids: string[], timestamp?: number) => Promise<any>;
