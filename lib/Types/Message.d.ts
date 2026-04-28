@@ -258,6 +258,7 @@ export type InteractiveButtonsMessageOptions = {
     media?: boolean;
     contextInfo?: proto.IContextInfo;
     mentions?: string[];
+    mentionAll?: boolean;
 };
 export type ShopMessageOptions = {
     shop: proto.Message.InteractiveMessage.ShopMessage.Surface;
@@ -270,6 +271,7 @@ export type ShopMessageOptions = {
     media?: boolean;
     contextInfo?: proto.IContextInfo;
     mentions?: string[];
+    mentionAll?: boolean;
 };
 export type AnyRegularMessageContent = (({
     text: string;
