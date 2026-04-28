@@ -1,4 +1,4 @@
-import { generateKeyPair } from 'libsignal/src/curve';
+import { generateKeyPair } from 'libsignal/src/curve.js';
 type KeyPairType = ReturnType<typeof generateKeyPair>;
 export declare function generateSenderKey(): Buffer;
 export declare function generateSenderKeyId(): number;
