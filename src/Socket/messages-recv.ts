@@ -1206,6 +1206,11 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 				decrypt
 			} = decryptMessageNode(node, authState.creds.me!.id, authState.creds.me!.lid || '', signalRepository, logger)
 
+			// Preserve newsletter server_id so bots can react to posts
+			if (msg.key.remoteJid?.endsWith('@newsletter') && node.attrs.server_id) {
+				(msg.key as any).server_id = node.attrs.server_id
+			}
+
 			const alt = msg.key.participantAlt || msg.key.remoteJidAlt
 			if (!!alt) {
 				const altServer = jidDecode(alt)?.server
