@@ -1,14 +1,14 @@
 import { DEFAULT_CONNECTION_CONFIG } from '../Defaults'
 import type { UserFacingSocketConfig } from '../Types'
-import { makeCommunitiesSocket } from './communities'
+import { makeInteropSocket } from './interop'
 
 const makeWASocket = (config: UserFacingSocketConfig) => {
-	const newConfig = {
-		...DEFAULT_CONNECTION_CONFIG,
-		...config
-	}
+        const newConfig = {
+                ...DEFAULT_CONNECTION_CONFIG,
+                ...config
+        }
 
-	return makeCommunitiesSocket(newConfig)
+        return makeInteropSocket(newConfig)
 }
 
 export default makeWASocket
