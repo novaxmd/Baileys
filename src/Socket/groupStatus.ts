@@ -529,20 +529,14 @@ export class ToxicHandler {
 
         async handleGroupStory(content: ToxicSendContent, jid: string, quoted?: WAMessage): Promise<WAMessage> {
                 const storyData = content.groupStatusMessage
-                let waMsgContent: proto.IMessage
 
-                if (storyData.message) {
-                        waMsgContent = storyData
-                } else {
-                        const generated = await generateWAMessageContent(storyData as AnyMessageContent, {
-                                upload: this.waUploadToServer
-                        })
-                        waMsgContent = generated as proto.IMessage
-                }
+                const msg = await generateWAMessage(jid, storyData as AnyMessageContent, {
+                        upload: this.waUploadToServer
+                } as any)
 
                 const msgPayload: proto.IMessage = {
                         groupStatusMessageV2: {
-                                message: (waMsgContent as any).message || waMsgContent
+                                message: msg.message!
                         }
                 }
 
