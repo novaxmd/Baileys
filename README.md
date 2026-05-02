@@ -10,19 +10,32 @@
 
 </div>
 
-A professionally enhanced, feature-rich fork of the Baileys WhatsApp Web API. Built for developers who need robust, stable WhatsApp automation with extended message types, improved connection handling, and comprehensive documentation.
+A professionally enhanced, feature-rich fork of the Baileys WhatsApp Web API. Built for developers who need robust, stable WhatsApp automation with LID identity mapping, AI group support, interoperability, extended message types, and improved connection handling.
 
 **Maintainer:** 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 ✓
 
 ---
 
+> [!IMPORTANT]
+> ### 🆔 LID Mapping — Critical Feature in This Fork
+> WhatsApp has rolled out **Linked Identity (LID)** JIDs as part of its cross-platform interoperability initiative. Group messages and status updates now arrive with `@lid` domain JIDs instead of standard `@s.whatsapp.net` phone-number JIDs. **Without LID resolution, you cannot identify who sent a message in many groups.**
+>
+> This fork ships a complete `LIDMappingStore` (bidirectional LRU cache + persistent key store) and `UsyncLIDProtocol` so your bot always knows the real phone number behind every `@lid` JID. See the **[🆔 LID Mapping System](#-lid-mapping-system)** section for full integration details.
+
+---
+
 ## 📋 Table of Contents
 
+- [🆕 What's New](#-whats-new)
 - [✨ Features](#-features)
 - [📦 Installation](#-installation)
 - [🚀 Quick Start](#-quick-start)
 - [🔌 Connection & Configuration](#-connection--configuration)
 - [💾 Authentication State Management](#-authentication-state-management)
+- [🆔 LID Mapping System](#-lid-mapping-system)
+- [🤖 AI Groups](#-ai-groups)
+- [🔗 Interoperability API](#-interoperability-api)
+- [🔄 USync Protocol](#-usync-protocol)
 - [📤 Sending Messages](#-sending-messages)
   - [Basic Messages](#basic-messages)
   - [Media Messages](#media-messages)
@@ -48,9 +61,31 @@ A professionally enhanced, feature-rich fork of the Baileys WhatsApp Web API. Bu
 
 ---
 
+## 🆕 What's New
+
+Compared to upstream Baileys, this fork adds:
+
+| Feature | Description |
+|---|---|
+| 🆔 **LID Mapping System** | Full `LIDMappingStore` with LRU cache, persistent key store, bidirectional lookups, and `UsyncLIDProtocol` |
+| 🤖 **AI Groups** | `makeAIGroupsSocket` — create, manage, and receive events for WhatsApp AI-powered groups |
+| 🔗 **Interoperability API** | `makeInteropSocket` — fetch third-party integrators, accept Interop TOS, opt in/out |
+| 📡 **USync Protocol Layer** | Full `WAUSync` module: LID, Contact, Device, Disappearing Mode, Status, Username, Bot Profile protocols |
+| 🔎 **MEX / GraphQL Queries** | `executeWMexQuery` for structured WhatsApp server queries via the `w:mex` IQ namespace |
+| 🗝️ **`me.lid` Credential** | Bot's own LID identity stored in credentials on pairing via `configureSuccessfulPairing` |
+| 📌 **`lidDbMigrated` Login Flag** | Signals to WhatsApp to push down LID mappings on connect |
+| 📺 **Group Status V2** | `ToxicHandler` exposed on socket for rich group story/status management |
+| 🔧 **`SignalRepositoryWithLIDStore`** | Extended signal repository type that exposes `lidMapping` directly on the socket |
+| 📣 **`newsletterId()` Helper** | Utility to extract a clean newsletter/channel ID from any JID format |
+
+---
+
 ## ✨ Features
 
 - 🚀 **Modern & Fast** — Latest WA version `[2,3000,1035194821]`, optimised pre-key upload (812 keys)
+- 🆔 **Full LID Identity Resolution** — Bidirectional LID↔PN mapping with LRU cache, USync lookup, and persistent storage
+- 🤖 **AI Groups Support** — Create and manage WhatsApp's AI-powered group type
+- 🔗 **Cross-Platform Interop** — Third-party integrator management (BirdyChat, Haiket, and more)
 - 🔧 **Enhanced Stability** — Improved connection handling, rate-limit backoff, 5 s keepAlive grace
 - 📱 **Multi-Device Support** — Full WhatsApp multi-device protocol with improved `historySyncConfig`
 - 🔐 **End-to-End Encryption** — Signal Protocol, `inlineInitialPayloadInE2EeMsg: true`
@@ -58,7 +93,7 @@ A professionally enhanced, feature-rich fork of the Baileys WhatsApp Web API. Bu
 - 👥 **Advanced Group Management** — Group controls, group status V2, communities support
 - 💾 **Flexible Auth** — Multi-file auth state with `makeCacheableSignalKeyStore`
 - 📡 **Full Newsletter/Channel API** — Follow, create, metadata, `newsletterId()` helper
-- 🛠️ **Developer Friendly** — `toxicHandler` exposed on socket, clean API
+- 🛠️ **Developer Friendly** — `toxicHandler` and `ToxicHandler` exposed on socket, clean API
 - 🌐 **WebSocket Improvements** — `perMessageDeflate: false`, 100 MB max payload
 
 ---
@@ -97,8 +132,8 @@ npm install github:xhclintohn/Baileys
 <summary>Basic Connection (QR Code)</summary>
 
 ```javascript
-const { makeWASocket, useMultiFileAuthState, DisconnectReason } = import makeWASocket from 'toxic-baileys';
-const { Boom } = require('@hapi/boom');
+import makeWASocket, { useMultiFileAuthState, DisconnectReason } from 'toxic-baileys';
+import { Boom } from '@hapi/boom';
 
 async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
@@ -109,7 +144,7 @@ async function connectToWhatsApp() {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) connectToWhatsApp();
         } else if (connection === 'open') {
-            console.log('Connected!');
+            console.log('Connected! Bot LID:', sock.user?.lid);
         }
     });
 
@@ -131,7 +166,7 @@ connectToWhatsApp().catch(console.error);
 <summary>Pairing Code (no QR)</summary>
 
 ```javascript
-const { makeWASocket, useMultiFileAuthState } = import makeWASocket from 'toxic-baileys';
+import makeWASocket, { useMultiFileAuthState } from 'toxic-baileys';
 
 async function connectWithPairing() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
@@ -157,8 +192,8 @@ connectWithPairing().catch(console.error);
 <summary>Full Socket Configuration</summary>
 
 ```javascript
-const { makeWASocket, Browsers } = import makeWASocket from 'toxic-baileys';
-const NodeCache = require('@cacheable/node-cache');
+import makeWASocket, { Browsers, makeCacheableSignalKeyStore } from 'toxic-baileys';
+import NodeCache from '@cacheable/node-cache';
 
 const groupCache = new NodeCache({ stdTTL: 300, useClones: false });
 
@@ -189,7 +224,7 @@ sock.ev.on('groups.update', async ([event]) => {
 <summary>Multi-File Auth (Development)</summary>
 
 ```javascript
-const { makeWASocket, useMultiFileAuthState } = import makeWASocket from 'toxic-baileys';
+import makeWASocket, { useMultiFileAuthState } from 'toxic-baileys';
 
 const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
 const sock = makeWASocket({ auth: state });
@@ -201,7 +236,7 @@ sock.ev.on('creds.update', saveCreds);
 <summary>Custom Database Auth (Production)</summary>
 
 ```javascript
-const { makeWASocket, makeCacheableSignalKeyStore } = import makeWASocket from 'toxic-baileys';
+import makeWASocket, { makeCacheableSignalKeyStore } from 'toxic-baileys';
 
 const myAuthState = {
     creds: await db.getAuthCreds(),
@@ -211,6 +246,330 @@ const sock = makeWASocket({ auth: myAuthState });
 sock.ev.on('creds.update', async (creds) => await db.saveAuthCreds(creds));
 ```
 </details>
+
+---
+
+## 🆔 LID Mapping System
+
+> [!IMPORTANT]
+> **This is one of the most critical new features in this fork.** WhatsApp is migrating groups to use Linked Identity (LID) JIDs — identifiers in the `@lid` domain that replace `@s.whatsapp.net` phone-number JIDs for privacy and cross-platform reasons. If you receive a message from `1234567890:0@lid` and don't have a mapping, you cannot identify the sender.
+
+### What is a LID?
+
+A **Linked Identity (LID)** is an opaque numeric identifier assigned to each WhatsApp account in the `@lid` domain. WhatsApp uses LIDs in groups to decouple a person's phone number from their group identity. The LID is stable across phone number changes and is used for the Signal encryption protocol in newer group types.
+
+```
+Standard JID:  254712345678@s.whatsapp.net  ← phone number visible
+LID JID:       9876543210:0@lid             ← opaque — phone number hidden
+```
+
+### How the Mapping Store Works
+
+This fork implements `LIDMappingStore` in `src/Signal/lid-mapping.ts`:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  LIDMappingStore                     │
+│                                                     │
+│  LRU Cache (3-day TTL, auto-purge)                  │
+│    pn:{pnUser}  →  lidUser                          │
+│    lid:{lidUser} →  pnUser                          │
+│         ↕                                           │
+│  SignalKeyStoreWithTransaction                      │
+│    lid-mapping/{pnUser}          → lidUser          │
+│    lid-mapping/{lidUser}_reverse → pnUser           │
+│         ↕                                           │
+│  USync Lookup (UsyncLIDProtocol)                    │
+│    Query WhatsApp servers via w:sync IQ             │
+└─────────────────────────────────────────────────────┘
+```
+
+**Persistent file naming** (with `useMultiFileAuthState`):
+```
+Session/
+  lid-mapping-{pnUser}.json           ← pnUser → lidUser
+  lid-mapping-{lidUser}_reverse.json  ← lidUser → pnUser  (reverse lookup)
+```
+
+### `me.lid` — Your Bot's Own LID
+
+When your bot pairs with WhatsApp, its own LID is stored in the session credentials:
+
+```javascript
+// Stored automatically by configureSuccessfulPairing()
+// Access it any time after connecting:
+const myLid = sock.user?.lid;
+console.log('My LID:', myLid); // e.g. "9876543210@lid"
+```
+
+### `lidDbMigrated` Login Flag
+
+The login payload includes `lidDbMigrated: false`. This signals to WhatsApp that the client has not yet migrated its local LID database, which causes WhatsApp to push down a full set of LID↔PN mappings on the initial connection — seeding your local store automatically.
+
+### API Reference
+
+```typescript
+// On the socket (via SignalRepositoryWithLIDStore):
+sock.signalRepository.lidMapping.getPNForLID(lidJid)         // string | null
+sock.signalRepository.lidMapping.getLIDForPN(pnJid)          // string | null
+sock.signalRepository.lidMapping.getPNsForLIDs(lidJids[])    // LIDMapping[] | null
+sock.signalRepository.lidMapping.getLIDsForPNs(pnJids[])     // LIDMapping[] | null
+sock.signalRepository.lidMapping.storeLIDPNMappings(pairs[]) // void
+
+// Type:
+type LIDMapping = { lid: string; pn: string }
+```
+
+### Live Integration Example
+
+```javascript
+import makeWASocket, { useMultiFileAuthState, makeCacheableSignalKeyStore } from 'toxic-baileys';
+
+const { state, saveCreds } = await useMultiFileAuthState('./Session');
+const lidPhoneCache = new Map();
+
+const sock = makeWASocket({
+    auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, console)
+    }
+});
+
+sock.ev.on('creds.update', saveCreds);
+
+// Wire up LID globals for use throughout your bot
+globalThis.resolvePhoneFromLid = (lidJid) => {
+    // synchronous — only works if the mapping is already cached
+    return null;
+};
+
+globalThis.resolvePhoneFromLidAsync = async (lidJid) => {
+    return await sock.signalRepository.lidMapping.getPNForLID(lidJid);
+};
+
+// Keep the in-memory cache warm from live LID mapping events
+sock.ev.on('lid-mapping.update', (map) => {
+    for (const [lid, pn] of Object.entries(map)) {
+        const lidNum = lid.split('@')[0].split(':')[0];
+        const phone = String(pn).split('@')[0].split(':')[0].replace(/\D/g, '');
+        if (lidNum && phone) lidPhoneCache.set(lidNum, phone);
+    }
+});
+
+// Resolving a sender from a group message
+sock.ev.on('messages.upsert', async ({ messages }) => {
+    for (const m of messages) {
+        const sender = m.key.participant || m.key.remoteJid || '';
+        if (sender.endsWith('@lid')) {
+            const resolved = await sock.signalRepository.lidMapping.getPNForLID(sender);
+            console.log(`LID ${sender} → ${resolved ?? 'unknown'}`);
+        }
+    }
+});
+```
+
+### Multi-Layer Resolution (Recommended Pattern)
+
+For maximum reliability, resolve LIDs in this priority order:
+
+```javascript
+async function resolveLid(lidJid, sock, lidPhoneCache) {
+    const lidNum = lidJid.split('@')[0].split(':')[0].replace(/\D/g, '');
+    if (!lidNum) return null;
+
+    // 1. In-memory LRU cache (fastest)
+    const cached = lidPhoneCache?.get(lidNum);
+    if (cached) return String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
+
+    // 2. Baileys LIDMappingStore (LRU + persistent key store)
+    const fromStore = await sock.signalRepository?.lidMapping?.getPNForLID(lidJid);
+    if (fromStore) {
+        const num = fromStore.split('@')[0].replace(/\D/g, '');
+        if (num) { lidPhoneCache?.set(lidNum, num); return num + '@s.whatsapp.net'; }
+    }
+
+    // 3. Session file (lid-mapping-{lidNum}_reverse.json)
+    try {
+        const revFile = `./Session/lid-mapping-${lidNum}_reverse.json`;
+        if (fs.existsSync(revFile)) {
+            const jid = JSON.parse(fs.readFileSync(revFile, 'utf-8'));
+            const num = String(jid).split('@')[0].replace(/\D/g, '');
+            if (num && num !== lidNum) {
+                lidPhoneCache?.set(lidNum, num);
+                return num + '@s.whatsapp.net';
+            }
+        }
+    } catch {}
+
+    // 4. Group metadata participant scan (network call — use sparingly)
+    try {
+        const meta = await sock.groupMetadata(chatJid);
+        for (const p of meta.participants || []) {
+            const pLid = (p.lid || p.id || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+            if (pLid !== lidNum) continue;
+            const pBase = p.id || p.jid || '';
+            if (pBase && !pBase.endsWith('@lid')) {
+                const num = pBase.split('@')[0].replace(/\D/g, '');
+                if (num) { lidPhoneCache?.set(lidNum, num); return num + '@s.whatsapp.net'; }
+            }
+        }
+    } catch {}
+
+    return null; // unresolvable — pass lidJid through and let WhatsApp handle it
+}
+```
+
+> [!NOTE]
+> **Session file cleanup warning:** If your bot cleans up session files periodically, make sure `lid-mapping-*` files are preserved in your keep-list, or your mapping cache will be lost on restart and need to be re-fetched from WhatsApp's servers.
+
+---
+
+## 🤖 AI Groups
+
+WhatsApp introduced AI-powered groups — special group types that include an AI bot participant. This fork exposes full management of these groups via `makeAIGroupsSocket` (which is included in the socket chain automatically).
+
+### Socket Chain
+
+```
+makeWASocket
+  └─ makeInteropSocket
+       └─ makeAIGroupsSocket
+            └─ makeCommunitiesSocket
+                 └─ makeGroupsSocket
+                      └─ ...
+```
+
+### AI Group Events
+
+```javascript
+// Automatically fires when an AI group is created
+sock.ev.on('groups.upsert', ([groupMeta]) => {
+    console.log('New group:', groupMeta.id, groupMeta.subject);
+});
+
+// Fires on participant changes (add/remove/promote/demote) in AI groups
+sock.ev.on('group-participants.update', ({ id, participants, action }) => {
+    console.log(`${action} in ${id}:`, participants);
+});
+```
+
+### AI Group Metadata
+
+```javascript
+// Fetch full metadata for an AI group (uses interactive query)
+const meta = await sock.aiGroupMetadata('1234567890@g.us');
+console.log('AI group subject:', meta.subject);
+console.log('Participants:', meta.participants);
+```
+
+### Add Bot to AI Group
+
+```javascript
+// Add an AI bot participant to an AI group
+await sock.aiGroupAddBot('1234567890@g.us');
+```
+
+---
+
+## 🔗 Interoperability API
+
+WhatsApp's interoperability (interop) system allows messages to be exchanged with third-party messaging platforms. This fork exposes the full interop socket layer via `makeInteropSocket`.
+
+### Supported Integrators
+
+| ID | Name | Notes |
+|---|---|---|
+| `12` | BirdyChat | Cross-platform messaging bridge |
+| `13` | Haiket | Cross-platform messaging bridge |
+
+### Fetch Available Integrators
+
+```javascript
+const integrators = await sock.fetchIntegrators();
+/*
+[
+  {
+    id: 12,
+    name: 'BirdyChat',
+    status: 'active',         // 'active' | 'onboarding' | 'removed'
+    identifierType: 'pn',     // 'email' | 'pn' | 'username'
+    optedIn: false,
+    features: { groupMessaging: true }
+  },
+  ...
+]
+*/
+```
+
+### Accept Interop Terms of Service
+
+```javascript
+// Must be called before opting in to any integrator
+await sock.acceptInteropTOS();
+```
+
+### Opt In to Integrators
+
+```javascript
+// Opt in to all default integrators (BirdyChat + Haiket)
+await sock.optInIntegrators();
+
+// Opt in to specific integrators by ID
+await sock.optInIntegrators([12]);
+```
+
+---
+
+## 🔄 USync Protocol
+
+`WAUSync` is WhatsApp's batch user-info query system. This fork exports the full USync module so you can run structured queries against WhatsApp's `w:sync:user` IQ namespace.
+
+### Available Protocols
+
+| Protocol Class | Purpose |
+|---|---|
+| `USyncContactProtocol` | Resolve contact info |
+| `USyncDeviceProtocol` | Fetch registered devices |
+| `USyncDisappearingModeProtocol` | Get disappearing message settings |
+| `USyncStatusProtocol` | Fetch user status |
+| `USyncUsernameProtocol` | Resolve usernames |
+| `UsyncBotProfileProtocol` | Fetch AI bot profile data |
+| `UsyncLIDProtocol` | Resolve LID ↔ phone-number pairs |
+
+### Running a USync Query
+
+```javascript
+import { USyncQuery, USyncUser, UsyncLIDProtocol, USyncDeviceProtocol } from 'toxic-baileys';
+
+const query = new USyncQuery();
+query.withContext('interactive');
+query.withProtocol(new UsyncLIDProtocol());
+query.withProtocol(new USyncDeviceProtocol());
+
+const user = new USyncUser();
+user.withPhone('254712345678@s.whatsapp.net');
+query.withUser(user);
+
+const result = await sock.executeUSyncRequest(query);
+console.log(result);
+```
+
+### MEX / GraphQL Queries
+
+For structured server queries, this fork exposes `executeWMexQuery` — a GraphQL-style query executor over WhatsApp's `w:mex` IQ namespace:
+
+```javascript
+import { executeWMexQuery } from 'toxic-baileys';
+
+const result = await executeWMexQuery(
+    { userId: '254712345678' },   // variables
+    'xwa2_user_profile',          // queryId (WhatsApp's internal query name)
+    'xwa2_user_profile',          // dataPath (key in the response data object)
+    sock.query.bind(sock),        // query function
+    sock.generateMessageTag.bind(sock)
+);
+console.log('MEX result:', result);
+```
 
 ---
 
@@ -351,21 +710,6 @@ await sock.sendMessage(jid, {
         ]
     }
 }, { quoted: m });
-
-// Interactive with document
-await sock.sendMessage(jid, {
-    interactiveMessage: {
-        header: 'Document',
-        title: 'File',
-        footer: 'toxic-baileys™',
-        document: fs.readFileSync('./file.pdf'),
-        mimetype: 'application/pdf',
-        fileName: 'document.pdf',
-        buttons: [
-            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'GitHub', url: 'https://github.com/xhclintohn/Baileys' }) }
-        ]
-    }
-}, { quoted: m });
 ```
 </details>
 
@@ -438,13 +782,16 @@ await sock.sendMessage(jid, {
 ### Group Status Messages
 
 <details>
-<summary>Post status to a group</summary>
+<summary>Post status/story to a group (Group Status V2)</summary>
 
 ```javascript
 await sock.sendMessage(groupJid, { groupStatusMessage: { text: 'Hello group! 👋' } });
 await sock.sendMessage(groupJid, { groupStatusMessage: { image: fs.readFileSync('./banner.jpg'), caption: 'Update!' } });
 await sock.sendMessage(groupJid, { groupStatusMessage: { video: fs.readFileSync('./promo.mp4'), caption: 'Promo' } });
 await sock.sendMessage(groupJid, { groupStatusMessage: { audio: fs.readFileSync('./audio.mp4'), mimetype: 'audio/mp4' } });
+
+// Using ToxicHandler directly (exposed on socket)
+const storyResult = await sock.toxicHandler.handleGroupStory(content, groupJid, quotedMsg);
 ```
 </details>
 
@@ -508,51 +855,20 @@ await sock.sendMessage(jid, {
 
 // List message
 await sock.sendMessage(jid, {
-    text: 'Select an item:',
+    text: 'Pick one:',
     footer: 'toxic-baileys™',
-    title: 'Main Menu',
-    buttonText: 'Open Menu',
+    title: 'Menu',
+    buttonText: 'Open List',
     sections: [
         {
-            title: 'Commands',
+            title: 'Section 1',
             rows: [
-                { title: '!help', rowId: 'help', description: 'Show help' },
-                { title: '!ping', rowId: 'ping', description: 'Check bot' }
+                { title: 'Item 1', rowId: 'row_1', description: 'Description 1' },
+                { title: 'Item 2', rowId: 'row_2', description: 'Description 2' }
             ]
         }
     ]
 });
-
-// Template buttons
-await sock.sendMessage(jid, {
-    text: 'Quick actions:',
-    footer: 'toxic-baileys™',
-    templateButtons: [
-        { index: 1, urlButton: { displayText: '🌐 GitHub', url: 'https://github.com/xhclintohn/Baileys' } },
-        { index: 2, callButton: { displayText: '📞 Call', phoneNumber: '+254712345678' } },
-        { index: 3, quickReplyButton: { displayText: '✅ OK', id: 'ok_reply' } }
-    ]
-});
-```
-</details>
-
-### Status Mention
-
-<details>
-<summary>Send status with mentions</summary>
-
-```javascript
-// Send status and mention specific contacts/groups
-await sock.sendStatusMention(
-    { text: 'Hello everyone! 👋', backgroundColor: '#FF5733' },
-    ['254712345678@s.whatsapp.net', groupJid]
-);
-
-// Media status with mention
-await sock.sendStatusMention(
-    { image: fs.readFileSync('./banner.jpg'), caption: 'New update!' },
-    ['254712345678@s.whatsapp.net']
-);
 ```
 </details>
 
@@ -561,22 +877,16 @@ await sock.sendStatusMention(
 ## 📁 Chat & Message Management
 
 <details>
-<summary>Chat Operations</summary>
+<summary>Read receipts, archive, pin, delete, star</summary>
 
 ```javascript
-await sock.chatModify({ archive: true }, jid);
-await sock.chatModify({ archive: false }, jid);
-await sock.chatModify({ mute: 8 * 60 * 60 * 1000 }, jid);
-await sock.chatModify({ mute: null }, jid);
-await sock.chatModify({ pin: true }, jid);
-await sock.chatModify({ pin: false }, jid);
-await sock.chatModify({ markRead: true }, jid);
-await sock.chatModify({ markRead: false }, jid);
 await sock.readMessages([m.key]);
-
-const { downloadMediaMessage } = import makeWASocket from 'toxic-baileys';
-const buffer = await downloadMediaMessage(m, 'buffer', {}, { logger: console });
-fs.writeFileSync('./download.jpg', buffer);
+await sock.sendReadReceipt(jid, participant, [m.key.id]);
+await sock.chatModify({ archive: true, lastMessages: [{ key: m.key, messageTimestamp: m.messageTimestamp }] }, jid);
+await sock.chatModify({ pin: true }, jid);
+await sock.chatModify({ delete: true, lastMessages: [{ key: m.key, messageTimestamp: m.messageTimestamp }] }, jid);
+await sock.chatModify({ star: { messages: [{ id: m.key.id, fromMe: m.key.fromMe }], star: true } }, jid);
+await sock.sendMessage(jid, { delete: m.key });
 ```
 </details>
 
@@ -585,26 +895,24 @@ fs.writeFileSync('./download.jpg', buffer);
 ## 👥 Group Management
 
 <details>
-<summary>Group Operations</summary>
+<summary>Create, modify, manage participants</summary>
 
 ```javascript
-const group = await sock.groupCreate('My Group', ['254712345678@s.whatsapp.net']);
-await sock.groupParticipantsUpdate(groupJid, ['254712345678@s.whatsapp.net'], 'add');
-await sock.groupParticipantsUpdate(groupJid, ['254712345678@s.whatsapp.net'], 'remove');
-await sock.groupParticipantsUpdate(groupJid, ['254712345678@s.whatsapp.net'], 'promote');
-await sock.groupParticipantsUpdate(groupJid, ['254712345678@s.whatsapp.net'], 'demote');
-await sock.groupUpdateSubject(groupJid, 'New Group Name');
-await sock.groupUpdateDescription(groupJid, 'New description');
-await sock.groupSettingUpdate(groupJid, 'announcement');
-await sock.groupSettingUpdate(groupJid, 'not_announcement');
-await sock.groupSettingUpdate(groupJid, 'locked');
-await sock.groupSettingUpdate(groupJid, 'unlocked');
-
-const code = await sock.groupInviteCode(groupJid);
-await sock.groupAcceptInvite('INVITE_CODE');
-const meta = await sock.groupMetadata(groupJid);
-await sock.groupLeave(groupJid);
-await sock.setLabelGroup(groupJid, 'VIP');
+const group = await sock.groupCreate('Group Name', ['254712345678@s.whatsapp.net']);
+await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'add');
+await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'remove');
+await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'promote');
+await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'demote');
+await sock.groupUpdateSubject(jid, 'New Name');
+await sock.groupUpdateDescription(jid, 'New description');
+await sock.groupSettingUpdate(jid, 'announcement');
+await sock.groupSettingUpdate(jid, 'not_announcement');
+await sock.groupSettingUpdate(jid, 'locked');
+await sock.groupSettingUpdate(jid, 'unlocked');
+await sock.groupLeave(jid);
+const inviteCode = await sock.groupInviteCode(jid);
+const meta = await sock.groupMetadata(jid);
+const all = await sock.groupFetchAllParticipating();
 ```
 </details>
 
@@ -613,23 +921,20 @@ await sock.setLabelGroup(groupJid, 'VIP');
 ## 👤 User & Profile Management
 
 <details>
-<summary>Profile & Presence Operations</summary>
+<summary>Profile photo, status, presence</summary>
 
 ```javascript
-const [result] = await sock.onWhatsApp('254712345678');
-console.log(result.exists, result.jid);
-
-const status = await sock.checkWhatsApp('254712345678@s.whatsapp.net');
-console.log(status.isBanned, status.isNeedOfficialWa);
-
-const ppUrl = await sock.profilePictureUrl(jid, 'image');
-await sock.updateProfileName('My New Name');
-await sock.updateProfileStatus('Powered by toxic-baileys™ 🚀');
-await sock.updateProfilePicture(sock.user.id, fs.readFileSync('./avatar.jpg'));
-
-sock.ev.on('presence.update', ({ id, presences }) => console.log(id, presences));
-await sock.presenceSubscribe(jid);
-const biz = await sock.getBusinessProfile(jid);
+await sock.updateProfilePicture(jid, { url: './avatar.jpg' });
+await sock.removeProfilePicture(jid);
+const pp = await sock.profilePictureUrl(jid, 'image');
+await sock.updateProfileStatus('Hey there! I am using toxic-baileys™');
+await sock.updateProfileName('My Bot Name');
+await sock.fetchStatus(jid);
+const exists = await sock.onWhatsApp('254712345678@s.whatsapp.net');
+await sock.sendPresenceUpdate('available', jid);
+await sock.sendPresenceUpdate('composing', jid);
+await sock.sendPresenceUpdate('recording', jid);
+await sock.sendPresenceUpdate('paused', jid);
 ```
 </details>
 
@@ -638,48 +943,35 @@ const biz = await sock.getBusinessProfile(jid);
 ## 📡 Newsletter / Channel Management
 
 <details>
-<summary>Full Newsletter / Channel API</summary>
+<summary>Create, follow, manage newsletters and channels</summary>
 
 ```javascript
-// Get ID from URL (unique to toxic-baileys)
-const info = await sock.newsletterId('https://whatsapp.com/channel/YOUR_CODE');
-console.log(JSON.parse(info)); // { name, id }
+import { newsletterId } from 'toxic-baileys';
 
-// Get full metadata from URL
-const meta = await sock.newsletterFromUrl('https://whatsapp.com/channel/YOUR_CODE');
+// Follow a channel
+await sock.newsletterFollow('1234567890@newsletter');
 
-// Full metadata by JID
-const fullMeta = await sock.newsletterMetadata('jid', '120363427340708111@newsletter');
+// Unfollow
+await sock.newsletterUnfollow('1234567890@newsletter');
 
-// Follow / unfollow / mute / unmute
-await sock.newsletterFollow('120363427340708111@newsletter');
-await sock.newsletterUnfollow('120363427340708111@newsletter');
-await sock.newsletterMute('120363427340708111@newsletter');
-await sock.newsletterUnmute('120363427340708111@newsletter');
+// Fetch channel metadata
+const meta = await sock.newsletterMetadata('invite', 'your-invite-link');
+console.log(meta.id, meta.name, meta.subscribers);
 
-// Create a newsletter
-const channel = await sock.newsletterCreate('My Channel', 'Description', 'ALL');
+// Create a channel
+const channel = await sock.newsletterCreate('Channel Name', { description: 'My channel' });
 
-// Update
-await sock.newsletterUpdateName('120363427340708111@newsletter', 'New Name');
-await sock.newsletterUpdateDescription('120363427340708111@newsletter', 'New description');
-await sock.newsletterUpdatePicture('120363427340708111@newsletter', fs.readFileSync('./pic.jpg'));
-await sock.newsletterRemovePicture('120363427340708111@newsletter');
+// Send a message to your channel
+await sock.sendMessage('1234567890@newsletter', { text: 'Channel update!' });
 
-// React to a newsletter message
-await sock.newsletterReactMessage('120363427340708111@newsletter', serverMessageId, '🔥');
+// newsletterId() helper — extract clean ID from any format
+const cleanId = newsletterId('1234567890@newsletter');
+const cleanIdFromLink = newsletterId('https://whatsapp.com/channel/yourlink');
+console.log('Clean ID:', cleanId);
 
-// Fetch messages
-const msgs = await sock.newsletterFetchMessages('jid', '120363427340708111@newsletter', 10);
-
-// Get all subscribed newsletters
-const subscribed = await sock.newsletterFetchAllSubscribe();
-
-// Subscribe to live updates
-await sock.subscribeNewsletterUpdates('120363427340708111@newsletter');
-
-// Delete newsletter
-await sock.newsletterDelete('120363427340708111@newsletter');
+// Mute/unmute
+await sock.newsletterMute('1234567890@newsletter');
+await sock.newsletterUnmute('1234567890@newsletter');
 ```
 </details>
 
@@ -688,17 +980,18 @@ await sock.newsletterDelete('120363427340708111@newsletter');
 ## 🔒 Privacy & Block Management
 
 <details>
-<summary>Privacy Settings & Block List</summary>
+<summary>Privacy settings and block list</summary>
 
 ```javascript
-await sock.updateLastSeenPrivacy('contacts');       // 'all' | 'contacts' | 'contact_blacklist' | 'none'
-await sock.updateOnlinePrivacy('match_last_seen');
-await sock.updateProfilePicturePrivacy('contacts');
+await sock.updateProfilePicturePrivacy('contacts');   // 'all' | 'contacts' | 'contact_blacklist' | 'none'
 await sock.updateStatusPrivacy('contacts');
-await sock.updateReadReceiptsPrivacy('all');        // 'all' | 'none'
+await sock.updateReadReceiptsPrivacy('all');           // 'all' | 'none'
 await sock.updateGroupsAddPrivacy('contacts');
+await sock.updateLastSeenPrivacy('contacts');
+await sock.updateOnlinePrivacy('all');
 
 const privacy = await sock.fetchPrivacySettings(true);
+
 await sock.updateBlockStatus(jid, 'block');
 await sock.updateBlockStatus(jid, 'unblock');
 const blocked = await sock.fetchBlocklist();
@@ -713,7 +1006,7 @@ const blocked = await sock.fetchBlocklist();
 <summary>In-Memory Store (Development)</summary>
 
 ```javascript
-const { makeInMemoryStore } = import makeWASocket from 'toxic-baileys';
+import makeWASocket, { makeInMemoryStore } from 'toxic-baileys';
 
 const store = makeInMemoryStore({ logger: console });
 store.readFromFile('./baileys_store.json');
@@ -725,18 +1018,18 @@ store.bind(sock.ev);
 </details>
 
 <details>
-<summary>Using toxicHandler Directly</summary>
+<summary>Using ToxicHandler Directly</summary>
 
 ```javascript
-// toxicHandler is exposed on the socket for advanced usage
+// ToxicHandler and toxicHandler are both exposed on the socket
 const { toxicHandler } = sock;
 
-const paymentContent = await toxicHandler.handlePayment(content, quoted);
-const interactiveContent = await toxicHandler.handleInteractive(content, jid, quoted);
-const albumResult = await toxicHandler.handleAlbum(content, jid, quoted);
-const eventResult = await toxicHandler.handleEvent(content, jid, quoted);
-const pollResult = await toxicHandler.handlePollResult(content, jid, quoted);
-const storyResult = await toxicHandler.handleGroupStory(content, jid, quoted);
+const paymentContent  = await toxicHandler.handlePayment(content, quoted);
+const interactive     = await toxicHandler.handleInteractive(content, jid, quoted);
+const album           = await toxicHandler.handleAlbum(content, jid, quoted);
+const event           = await toxicHandler.handleEvent(content, jid, quoted);
+const pollResult      = await toxicHandler.handlePollResult(content, jid, quoted);
+const groupStory      = await toxicHandler.handleGroupStory(content, jid, quoted);
 ```
 </details>
 
@@ -748,28 +1041,36 @@ const storyResult = await toxicHandler.handleGroupStory(content, jid, quoted);
 <summary>Core Utilities</summary>
 
 ```javascript
-const {
+import {
     getContentType, areJidsSameUser, isJidGroup, isJidBroadcast,
     isJidStatusBroadcast, isJidNewsLetter, jidNormalizedUser,
+    isLidUser, isPnUser, isHostedPnUser,
     generateMessageID, generateMessageIDV2, generateWAMessage,
     generateWAMessageContent, generateWAMessageFromContent,
     downloadContentFromMessage, getAggregateVotesInPollMessage,
-    extractMessageContent, normalizeMessageContent, proto
-} = import makeWASocket from 'toxic-baileys';
+    extractMessageContent, normalizeMessageContent, newsletterId,
+    proto
+} from 'toxic-baileys';
 
 const type = getContentType(m.message);
-console.log(isJidGroup('123@g.us'));        // true
+console.log(isJidGroup('123@g.us'));           // true
 console.log(isJidNewsLetter('123@newsletter')); // true
+console.log(isLidUser('12345@lid'));            // true
 
-const votes = getAggregateVotesInPollMessage(
-    { message: pollMsg.message, pollUpdates },
-    sock.user.id
-);
+// Extract clean newsletter ID
+const id = newsletterId('https://whatsapp.com/channel/mylink');
 
+// Download media
 const stream = await downloadContentFromMessage(m.message.imageMessage, 'image');
 const chunks = [];
 for await (const chunk of stream) chunks.push(chunk);
 const buffer = Buffer.concat(chunks);
+
+// Aggregate poll votes
+const votes = getAggregateVotesInPollMessage(
+    { message: pollMsg.message, pollUpdates },
+    sock.user.id
+);
 ```
 </details>
 
@@ -782,6 +1083,12 @@ const buffer = Buffer.concat(chunks);
 2. Cache group metadata using `cachedGroupMetadata`
 3. Use `markOnlineOnConnect: false` to still receive phone notifications
 4. Set `syncFullHistory: true` for complete history
+
+### LID Mapping
+1. Always preserve `lid-mapping-*` files in session cleanup routines
+2. Listen to the `lid-mapping.update` event to keep your in-memory cache warm
+3. Fall back to group metadata scan only when all cache/store lookups fail
+4. Use `sock.user?.lid` to access your own bot's LID identity
 
 ### Performance
 1. Use `@cacheable/node-cache` for group metadata caching
@@ -871,8 +1178,14 @@ This project is **NOT** affiliated with, authorized, maintained, sponsored, or e
 ## 🆘 Getting Help
 
 1. **GitHub Issues** — [github.com/xhclintohn/Baileys/issues](https://github.com/xhclintohn/Baileys/issues)
-2. **WhatsApp** — +254114885159
-3. **Response Time** — Typically within 24–48 hours
+2. **Response Time** — Typically within 24–48 hours
+
+<div align="center">
+
+[![WhatsApp Chat](https://img.shields.io/badge/WhatsApp-Chat_with_Me-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/254114885159)
+[![GitHub Follow](https://img.shields.io/badge/GitHub-Follow_@xhclintohn-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/xhclintohn)
+
+</div>
 
 ---
 
