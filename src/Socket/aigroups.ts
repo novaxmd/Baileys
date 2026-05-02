@@ -11,10 +11,10 @@ import {
         jidEncode,
         jidNormalizedUser
 } from '../WABinary'
-import { makeGroupsSocket } from './groups'
+import { makeCommunitiesSocket } from './communities'
 
 export const makeAIGroupsSocket = (config: SocketConfig) => {
-        const sock = makeGroupsSocket(config)
+        const sock = makeCommunitiesSocket(config)
         const { ev, query } = sock
 
         const aiGroupQuery = async (jid: string, type: 'get' | 'set', content: BinaryNode[]) =>
