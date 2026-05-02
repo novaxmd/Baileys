@@ -1,8 +1,8 @@
 {
   "name": "toxic-baileys",
   "type": "module",
-  "version": "1.0.7",
-  "description": "WhatsApp API Enhancement \u2014 Feature-rich fork of Baileys by xhclintohn",
+  "version": "1.0.8",
+  "description": "WhatsApp API Enhancement — Feature-rich fork of Baileys by xhclintohn",
   "keywords": [
     "whatsapp",
     "baileys",
