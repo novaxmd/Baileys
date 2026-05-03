@@ -529,14 +529,33 @@ export class ToxicHandler {
 
         async handleGroupStory(content: ToxicSendContent, jid: string, quoted?: WAMessage): Promise<WAMessage> {
                 const storyData = content.groupStatusMessage
+                let waMsgContent: any
 
-                const msg = await generateWAMessage(jid, storyData as AnyMessageContent, {
-                        upload: this.waUploadToServer
-                } as any)
+                if (storyData.message) {
+                        waMsgContent = storyData
+                } else {
+                        if (typeof (this as any).bail?.generateWAMessageContent === 'function') {
+                                waMsgContent = await (this as any).bail.generateWAMessageContent(storyData, {
+                                        upload: this.waUploadToServer
+                                })
+                        } else if (typeof this.utils?.generateWAMessageContent === 'function') {
+                                waMsgContent = await this.utils.generateWAMessageContent(storyData as AnyMessageContent, {
+                                        upload: this.waUploadToServer
+                                })
+                        } else if (typeof (this.utils as any)?.prepareMessageContent === 'function') {
+                                waMsgContent = await (this.utils as any).prepareMessageContent(storyData, {
+                                        upload: this.waUploadToServer
+                                })
+                        } else {
+                                waMsgContent = await generateWAMessageContent(storyData as AnyMessageContent, {
+                                        upload: this.waUploadToServer
+                                })
+                        }
+                }
 
                 const msgPayload: proto.IMessage = {
                         groupStatusMessageV2: {
-                                message: msg.message!
+                                message: waMsgContent.message || waMsgContent
                         }
                 }
 
