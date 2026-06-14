@@ -1,8 +1,8 @@
 {
-  "name": "toxic-baileys",
+  "name": "bmbtech-baileys",
   "type": "module",
   "version": "1.0.10",
-  "description": "WhatsApp API Enhancement — Feature-rich fork of Baileys by xhclintohn",
+  "description": "WhatsApp API Enhancement — Feature-rich fork of Baileys by novaxmd",
   "keywords": [
     "whatsapp",
     "baileys",
@@ -15,12 +15,12 @@
     "bails",
     "automation"
   ],
-  "homepage": "https://github.com/xhclintohn/Baileys",
+  "homepage": "https://github.com/novaxmd/Baileys",
   "repository": {
-    "url": "git+https://github.com/xhclintohn/Baileys.git"
+    "url": "git+https://github.com/novaxmd/Baileys.git"
   },
   "license": "MIT",
-  "author": "xhclintohn",
+  "author": "novaxmd",
   "contributors": [
     {
       "name": "Rajeh Taher",
