@@ -261,7 +261,7 @@ sock.ev.on('creds.update', async (creds) => await db.saveAuthCreds(creds));
 A **Linked Identity (LID)** is an opaque numeric identifier assigned to each WhatsApp account in the `@lid` domain. WhatsApp uses LIDs in groups to decouple a person's phone number from their group identity. The LID is stable across phone number changes and is used for the Signal encryption protocol in newer group types.
 
 ```
-Standard JID:  254712345678@s.whatsapp.net  ← phone number visible
+Standard JID:  2557678624578@s.whatsapp.net  ← phone number visible
 LID JID:       9876543210:0@lid             ← opaque — phone number hidden
 ```
 
