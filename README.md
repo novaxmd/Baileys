@@ -121,7 +121,7 @@ npm install github:novaxmd/Baileys
 ```json
 {
   "dependencies": {
-    "@whiskeysockets/baileys": "npm:toxic-baileys@latest"
+    "@whiskeysockets/baileys": "npm:novaxmd-baileys@latest"
   }
 }
 ```
