@@ -102,12 +102,14 @@ Compared to upstream Baileys, this fork adds:
 
 ### Via npm
 ```bash
-npm install toxic-baileys
+npm i novaxmd-baileys
+
 ```
 
 ### Via Yarn
 ```bash
-yarn add toxic-baileys
+yarn add novaxmd-baileys
+
 ```
 
 ### From GitHub (edge)
