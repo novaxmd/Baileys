@@ -176,7 +176,7 @@ async function connectWithPairing() {
     sock.ev.on('creds.update', saveCreds);
 
     if (!sock.authState.creds.registered) {
-        const phoneNumber = '254712345678'; // no + or spaces
+        const phoneNumber = '255767862457'; // no + or spaces
         const code = await sock.requestPairingCode(phoneNumber);
         console.log('Pairing Code:', code);
     }
