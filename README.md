@@ -114,7 +114,7 @@ yarn add novaxmd-baileys
 
 ### From GitHub (edge)
 ```bash
-npm install github:xhclintohn/Baileys
+npm install github:novaxmd/Baileys
 ```
 
 ### Drop-in replacement for `@whiskeysockets/baileys`
