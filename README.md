@@ -74,7 +74,7 @@ Compared to upstream Baileys, this fork adds:
 | 🔎 **MEX / GraphQL Queries** | `executeWMexQuery` for structured WhatsApp server queries via the `w:mex` IQ namespace |
 | 🗝️ **`me.lid` Credential** | Bot's own LID identity stored in credentials on pairing via `configureSuccessfulPairing` |
 | 📌 **`lidDbMigrated` Login Flag** | Signals to WhatsApp to push down LID mappings on connect |
-| 📺 **Group Status V2** | `ToxicHandler` exposed on socket for rich group story/status management |
+| 📺 **Group Status V2** | `novaxmdHandler` exposed on socket for rich group story/status management |
 | 🔧 **`SignalRepositoryWithLIDStore`** | Extended signal repository type that exposes `lidMapping` directly on the socket |
 | 📣 **`newsletterId()` Helper** | Utility to extract a clean newsletter/channel ID from any JID format |
 
@@ -93,7 +93,7 @@ Compared to upstream Baileys, this fork adds:
 - 👥 **Advanced Group Management** — Group controls, group status V2, communities support
 - 💾 **Flexible Auth** — Multi-file auth state with `makeCacheableSignalKeyStore`
 - 📡 **Full Newsletter/Channel API** — Follow, create, metadata, `newsletterId()` helper
-- 🛠️ **Developer Friendly** — `toxicHandler` and `ToxicHandler` exposed on socket, clean API
+- 🛠️ **Developer Friendly** — `novaxmdHandler` and `novaxmdHandler` exposed on socket, clean API
 - 🌐 **WebSocket Improvements** — `perMessageDeflate: false`, 100 MB max payload
 
 ---
@@ -134,7 +134,7 @@ npm install github:novaxmd/Baileys
 <summary>Basic Connection (QR Code)</summary>
 
 ```javascript
-import makeWASocket, { useMultiFileAuthState, DisconnectReason } from 'toxic-baileys';
+import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '255767862457-baileys';
 import { Boom } from '@hapi/boom';
 
 async function connectToWhatsApp() {
@@ -168,7 +168,7 @@ connectToWhatsApp().catch(console.error);
 <summary>Pairing Code (no QR)</summary>
 
 ```javascript
-import makeWASocket, { useMultiFileAuthState } from 'toxic-baileys';
+import makeWASocket, { useMultiFileAuthState } from '255767862457-baileys';
 
 async function connectWithPairing() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
@@ -194,7 +194,7 @@ connectWithPairing().catch(console.error);
 <summary>Full Socket Configuration</summary>
 
 ```javascript
-import makeWASocket, { Browsers, makeCacheableSignalKeyStore } from 'toxic-baileys';
+import makeWASocket, { Browsers, makeCacheableSignalKeyStore } from 'novaxmd-baileys';
 import NodeCache from '@cacheable/node-cache';
 
 const groupCache = new NodeCache({ stdTTL: 300, useClones: false });
@@ -226,7 +226,7 @@ sock.ev.on('groups.update', async ([event]) => {
 <summary>Multi-File Auth (Development)</summary>
 
 ```javascript
-import makeWASocket, { useMultiFileAuthState } from 'toxic-baileys';
+import makeWASocket, { useMultiFileAuthState } from 'novaxmd-baileys';
 
 const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
 const sock = makeWASocket({ auth: state });
@@ -238,7 +238,7 @@ sock.ev.on('creds.update', saveCreds);
 <summary>Custom Database Auth (Production)</summary>
 
 ```javascript
-import makeWASocket, { makeCacheableSignalKeyStore } from 'toxic-baileys';
+import makeWASocket, { makeCacheableSignalKeyStore } from 'novaxmd-baileys';
 
 const myAuthState = {
     creds: await db.getAuthCreds(),
@@ -325,7 +325,7 @@ type LIDMapping = { lid: string; pn: string }
 ### Live Integration Example
 
 ```javascript
-import makeWASocket, { useMultiFileAuthState, makeCacheableSignalKeyStore } from 'toxic-baileys';
+import makeWASocket, { useMultiFileAuthState, makeCacheableSignalKeyStore } from 'novaxmd-baileys';
 
 const { state, saveCreds } = await useMultiFileAuthState('./Session');
 const lidPhoneCache = new Map();
@@ -541,7 +541,7 @@ await sock.optInIntegrators([12]);
 ### Running a USync Query
 
 ```javascript
-import { USyncQuery, USyncUser, UsyncLIDProtocol, USyncDeviceProtocol } from 'toxic-baileys';
+import { USyncQuery, USyncUser, UsyncLIDProtocol, USyncDeviceProtocol } from 'novaxmd-baileys';
 
 const query = new USyncQuery();
 query.withContext('interactive');
@@ -549,7 +549,7 @@ query.withProtocol(new UsyncLIDProtocol());
 query.withProtocol(new USyncDeviceProtocol());
 
 const user = new USyncUser();
-user.withPhone('254712345678@s.whatsapp.net');
+user.withPhone('255767862457@s.whatsapp.net');
 query.withUser(user);
 
 const result = await sock.executeUSyncRequest(query);
@@ -561,10 +561,10 @@ console.log(result);
 For structured server queries, this fork exposes `executeWMexQuery` — a GraphQL-style query executor over WhatsApp's `w:mex` IQ namespace:
 
 ```javascript
-import { executeWMexQuery } from 'toxic-baileys';
+import { executeWMexQuery } from 'novaxmd-baileys';
 
 const result = await executeWMexQuery(
-    { userId: '254712345678' },   // variables
+    { userId: '255767862457' },   // variables
     'xwa2_user_profile',          // queryId (WhatsApp's internal query name)
     'xwa2_user_profile',          // dataPath (key in the response data object)
     sock.query.bind(sock),        // query function
@@ -585,7 +585,7 @@ console.log('MEX result:', result);
 ```javascript
 await sock.sendMessage(jid, { text: 'Hello World!' });
 await sock.sendMessage(jid, { text: 'Reply!' }, { quoted: m });
-await sock.sendMessage(jid, { text: 'Hi @user!', mentions: ['254712345678@s.whatsapp.net'] });
+await sock.sendMessage(jid, { text: 'Hi @user!', mentions: ['255767862457@s.whatsapp.net'] });
 await sock.sendMessage(jid, { forward: m });
 
 const sent = await sock.sendMessage(jid, { text: 'Original' });
@@ -624,13 +624,13 @@ await sock.sendMessage(jid, { image: fs.readFileSync('./img.jpg'), viewOnce: tru
 // Copy button
 await sock.sendMessage(jid, {
     interactiveMessage: {
-        header: 'toxic-baileys™',
+        header: 'novaxmd-baileys™',
         title: 'Hello World',
-        footer: 'By 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 ✓',
+        footer: 'By Bmb Tech ✓',
         buttons: [
             {
                 name: 'cta_copy',
-                buttonParamsJson: JSON.stringify({ display_text: 'Copy Code', id: '1', copy_code: 'TOXIC123' })
+                buttonParamsJson: JSON.stringify({ display_text: 'Copy Code', id: '1', copy_code: 'novaxmd123' })
             }
         ]
     }
@@ -640,12 +640,12 @@ await sock.sendMessage(jid, {
 await sock.sendMessage(jid, {
     interactiveMessage: {
         header: 'Visit Us',
-        title: 'toxic-baileys',
+        title: 'novaxmd-baileys',
         footer: 'GitHub',
         buttons: [
             {
                 name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: 'Open GitHub', url: 'https://github.com/xhclintohn/Baileys' })
+                buttonParamsJson: JSON.stringify({ display_text: 'Open GitHub', url: 'https://github.com/novaxmd/Baileys' })
             }
         ]
     }
@@ -655,7 +655,7 @@ await sock.sendMessage(jid, {
 await sock.sendMessage(jid, {
     interactiveMessage: {
         header: 'With Image',
-        title: 'toxic-baileys™',
+        title: 'novaxmd-baileys™',
         footer: 'Best Baileys Fork',
         image: { url: 'https://example.com/image.jpg' },
         buttons: [
@@ -696,19 +696,19 @@ await sock.sendMessage(jid, {
 await sock.sendMessage(jid, {
     interactiveMessage: {
         header: 'Premium',
-        title: 'toxic-baileys™',
-        footer: 'By 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
+        title: 'novaxmd-baileys™',
+        footer: 'By Bmb Tech',
         externalAdReply: {
-            title: 'toxic-baileys',
+            title: 'novaxmd-baileys',
             body: 'Best WhatsApp Library',
             mediaType: 1,
             thumbnailUrl: 'https://example.com/thumb.jpg',
-            sourceUrl: 'https://github.com/xhclintohn/Baileys',
+            sourceUrl: 'https://github.com/novaxmd/Baileys',
             showAdAttribution: true,
             renderLargerThumbnail: true
         },
         buttons: [
-            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit', url: 'https://github.com/xhclintohn/Baileys' }) }
+            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit', url: 'https://github.com/novaxmd/Baileys' }) }
         ]
     }
 }, { quoted: m });
@@ -740,7 +740,7 @@ await sock.sendMessage(jid, {
 await sock.sendMessage(jid, {
     eventMessage: {
         isCanceled: false,
-        name: 'toxic-baileys Launch',
+        name: 'novaxmd-baileys Launch',
         description: 'Join us for the launch!',
         location: { degreesLatitude: -1.2921, degreesLongitude: 36.8219, name: 'Nairobi, Kenya' },
         joinLink: 'https://call.whatsapp.com/video/your-link',
@@ -762,7 +762,7 @@ await sock.sendMessage(jid, {
 await sock.sendMessage(jid, {
     poll: {
         name: 'Best WhatsApp library?',
-        values: ['toxic-baileys', 'Baileys', 'Other'],
+        values: ['novaxmd-baileys', 'Baileys', 'Other'],
         selectableCount: 1
     }
 });
@@ -772,7 +772,7 @@ await sock.sendMessage(jid, {
     pollResultMessage: {
         name: 'Best Library Results',
         pollVotes: [
-            { optionName: 'toxic-baileys', optionVoteCount: '42' },
+            { optionName: 'novaxmd-baileys', optionVoteCount: '42' },
             { optionName: 'Baileys', optionVoteCount: '10' },
             { optionName: 'Other', optionVoteCount: '2' }
         ]
@@ -792,8 +792,8 @@ await sock.sendMessage(groupJid, { groupStatusMessage: { image: fs.readFileSync(
 await sock.sendMessage(groupJid, { groupStatusMessage: { video: fs.readFileSync('./promo.mp4'), caption: 'Promo' } });
 await sock.sendMessage(groupJid, { groupStatusMessage: { audio: fs.readFileSync('./audio.mp4'), mimetype: 'audio/mp4' } });
 
-// Using ToxicHandler directly (exposed on socket)
-const storyResult = await sock.toxicHandler.handleGroupStory(content, groupJid, quotedMsg);
+// Using novaxmdHandler directly (exposed on socket)
+const storyResult = await sock.novaxmdHandler.handleGroupStory(content, groupJid, quotedMsg);
 ```
 </details>
 
@@ -827,12 +827,12 @@ await sock.sendMessage(jid, {
         thumbnail: { url: 'https://example.com/product.jpg' },
         productId: 'PROD001',
         retailerId: 'xhclinton',
-        url: 'https://github.com/xhclintohn/Baileys',
+        url: 'https://github.com/novaxmd/Baileys',
         body: 'Full featured automation',
         footer: 'Special price',
         priceAmount1000: 10000,
         currencyCode: 'USD',
-        buttons: [{ name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Buy Now', url: 'https://github.com/xhclintohn/Baileys' }) }]
+        buttons: [{ name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Buy Now', url: 'https://github.com/novaxmd/Baileys' }) }]
     }
 }, { quoted: m });
 ```
@@ -847,7 +847,7 @@ await sock.sendMessage(jid, {
 // Classic buttons
 await sock.sendMessage(jid, {
     text: 'Choose:',
-    footer: 'toxic-baileys™',
+    footer: 'novaxmd-baileys™',
     buttons: [
         { buttonId: 'btn_1', buttonText: { displayText: 'Option 1' }, type: 1 },
         { buttonId: 'btn_2', buttonText: { displayText: 'Option 2' }, type: 1 }
@@ -858,7 +858,7 @@ await sock.sendMessage(jid, {
 // List message
 await sock.sendMessage(jid, {
     text: 'Pick one:',
-    footer: 'toxic-baileys™',
+    footer: 'novaxmd-baileys™',
     title: 'Menu',
     buttonText: 'Open List',
     sections: [
@@ -900,11 +900,11 @@ await sock.sendMessage(jid, { delete: m.key });
 <summary>Create, modify, manage participants</summary>
 
 ```javascript
-const group = await sock.groupCreate('Group Name', ['254712345678@s.whatsapp.net']);
-await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'add');
-await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'remove');
-await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'promote');
-await sock.groupParticipantsUpdate(jid, ['254712345678@s.whatsapp.net'], 'demote');
+const group = await sock.groupCreate('Group Name', ['255767862457@s.whatsapp.net']);
+await sock.groupParticipantsUpdate(jid, ['255767862457@s.whatsapp.net'], 'add');
+await sock.groupParticipantsUpdate(jid, ['255767862457@s.whatsapp.net'], 'remove');
+await sock.groupParticipantsUpdate(jid, ['255767862457@s.whatsapp.net'], 'promote');
+await sock.groupParticipantsUpdate(jid, ['255767862457@s.whatsapp.net'], 'demote');
 await sock.groupUpdateSubject(jid, 'New Name');
 await sock.groupUpdateDescription(jid, 'New description');
 await sock.groupSettingUpdate(jid, 'announcement');
@@ -929,10 +929,10 @@ const all = await sock.groupFetchAllParticipating();
 await sock.updateProfilePicture(jid, { url: './avatar.jpg' });
 await sock.removeProfilePicture(jid);
 const pp = await sock.profilePictureUrl(jid, 'image');
-await sock.updateProfileStatus('Hey there! I am using toxic-baileys™');
+await sock.updateProfileStatus('Hey there! I am using novaxmd-baileys™');
 await sock.updateProfileName('My Bot Name');
 await sock.fetchStatus(jid);
-const exists = await sock.onWhatsApp('254712345678@s.whatsapp.net');
+const exists = await sock.onWhatsApp('255767862467@s.whatsapp.net');
 await sock.sendPresenceUpdate('available', jid);
 await sock.sendPresenceUpdate('composing', jid);
 await sock.sendPresenceUpdate('recording', jid);
@@ -948,7 +948,7 @@ await sock.sendPresenceUpdate('paused', jid);
 <summary>Create, follow, manage newsletters and channels</summary>
 
 ```javascript
-import { newsletterId } from 'toxic-baileys';
+import { newsletterId } from 'novaxmd-baileys';
 
 // Follow a channel
 await sock.newsletterFollow('1234567890@newsletter');
@@ -1008,7 +1008,7 @@ const blocked = await sock.fetchBlocklist();
 <summary>In-Memory Store (Development)</summary>
 
 ```javascript
-import makeWASocket, { makeInMemoryStore } from 'toxic-baileys';
+import makeWASocket, { makeInMemoryStore } from 'novaxmd-baileys';
 
 const store = makeInMemoryStore({ logger: console });
 store.readFromFile('./baileys_store.json');
@@ -1020,18 +1020,18 @@ store.bind(sock.ev);
 </details>
 
 <details>
-<summary>Using ToxicHandler Directly</summary>
+<summary>Using novaxmdHandler Directly</summary>
 
 ```javascript
-// ToxicHandler and toxicHandler are both exposed on the socket
-const { toxicHandler } = sock;
+// novaxmdHandler and novaxmdHandler are both exposed on the socket
+const { novaxmdHandler } = sock;
 
-const paymentContent  = await toxicHandler.handlePayment(content, quoted);
-const interactive     = await toxicHandler.handleInteractive(content, jid, quoted);
-const album           = await toxicHandler.handleAlbum(content, jid, quoted);
-const event           = await toxicHandler.handleEvent(content, jid, quoted);
-const pollResult      = await toxicHandler.handlePollResult(content, jid, quoted);
-const groupStory      = await toxicHandler.handleGroupStory(content, jid, quoted);
+const paymentContent  = await novaxmdHandler.handlePayment(content, quoted);
+const interactive     = await novaxmdHandler.handleInteractive(content, jid, quoted);
+const album           = await novaxmdHandler.handleAlbum(content, jid, quoted);
+const event           = await novaxmdHandler.handleEvent(content, jid, quoted);
+const pollResult      = await novaxmdHandler.handlePollResult(content, jid, quoted);
+const groupStory      = await novaxmdHandler.handleGroupStory(content, jid, quoted);
 ```
 </details>
 
@@ -1052,7 +1052,7 @@ import {
     downloadContentFromMessage, getAggregateVotesInPollMessage,
     extractMessageContent, normalizeMessageContent, newsletterId,
     proto
-} from 'toxic-baileys';
+} from 'novaxmd-baileys';
 
 const type = getContentType(m.message);
 console.log(isJidGroup('123@g.us'));           // true
@@ -1179,13 +1179,13 @@ This project is **NOT** affiliated with, authorized, maintained, sponsored, or e
 
 ## 🆘 Getting Help
 
-1. **GitHub Issues** — [github.com/xhclintohn/Baileys/issues](https://github.com/xhclintohn/Baileys/issues)
+1. **GitHub Issues** — [github.com/novaxmd/Baileys/issues](https://github.com/novaxmd/Baileys/issues)
 2. **Response Time** — Typically within 24–48 hours
 
 <div align="center">
 
-[![WhatsApp Chat](https://img.shields.io/badge/WhatsApp-Chat_with_Me-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/254114885159)
-[![GitHub Follow](https://img.shields.io/badge/GitHub-Follow_@xhclintohn-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/xhclintohn)
+[![WhatsApp Chat](https://img.shields.io/badge/WhatsApp-Chat_with_Me-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/255767862457)
+[![GitHub Follow](https://img.shields.io/badge/GitHub-Follow_@novaxmd-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/novaxmd)
 
 </div>
 
@@ -1195,13 +1195,13 @@ This project is **NOT** affiliated with, authorized, maintained, sponsored, or e
 
 MIT License. See [LICENSE](LICENSE) for details.
 
-**Credits:** Original Baileys by [WhiskeySockets](https://github.com/WhiskeySockets/Baileys) · toxic-baileys enhancements by **𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 ✓**
+**Credits:** Original Baileys by [WhiskeySockets](https://github.com/WhiskeySockets/Baileys) · novaxmd-baileys enhancements by **Bmb Tech ✓**
 
 ---
 
 <div align="center">
 
-🌟 **toxic-baileys™** — Crafted with ❤️ by **𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 ✓**
+🌟 **novaxmd-baileys™** — Crafted with ❤️ by **Bmb Tech ✓**
 
 *The most powerful WhatsApp automation toolkit*
 
